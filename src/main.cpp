@@ -51,6 +51,7 @@ String readFile(fs::FS &fs, const char * path);
 bool writeFile(fs::FS &fs, const char * path, const char * message);
 bool readFileCheck();
 void PrintWiFiStatus();
+void darwBilibili(uint8 index);
 void drawSubs();
 
 template<typename T>
@@ -70,17 +71,18 @@ void loop() {
   dnsServer.processNextRequest();
 
   if (WiFi.status() == WL_CONNECTED){
-        if (getJson()){
-            if (parseJson(response)){
-                DEBUGLN("follower: " +  String(follower));
-            }
-        }
-        drawSubs();
-    }else{
-        DEBUGLN("[WiFi] Waiting to reconnect...");
+    if (getJson()){
+      if (parseJson(response))
+          DEBUGLN("follower: " +  String(follower));
     }
-  delay(3000);
-  
+    drawSubs();
+    delay(2800);
+  }else{
+    DEBUGLN("[WiFi] Waiting to reconnect...");
+    PrintWiFiStatus();
+  }
+  delay(200);
+
 }
 
 void handleRoot() {//访问主页回调函数
@@ -119,44 +121,28 @@ void handleRootPost() {//Post回调函数
     return;
   }
 
-  if (server.hasArg("BilibiliID")) {
-    DEBUG("got Bilibili ID:");
-    // strcpy(biliuid, server.arg("BilibiliID").c_str());
-    biliuid = server.arg("BilibiliID");
-    DEBUGLN("Writing ssid to file biliuid.txt" + biliuid);
-    if (writeFile(SPIFFS, "/biliuid.txt", biliuid.c_str()))
-      DEBUGLN("handleRootPost: successfully write biliuid.txt");
-    else
-      DEBUGLN("handleRootPost: successfully write biliuid.txt");
-  } else {
-    DEBUGLN("error, not found password");
-    server.send(200, "text/html", "<meta charset='UTF-8'>error, not found Bilibili ID");
-    return;
-  }
+  // temporarily hardcode biliuid.
+  // TBD: pull avatar icon and name and fix the issue of 
+  // some chinese characters cannot display (missing unicode mapping)
+
+  // if (server.hasArg("BilibiliID")) {
+  //   DEBUG("got Bilibili ID:");
+  //   biliuid = server.arg("BilibiliID");
+  //   DEBUGLN("Writing ssid to file biliuid.txt" + biliuid);
+  //   if (writeFile(SPIFFS, "/biliuid.txt", biliuid.c_str()))
+  //     DEBUGLN("handleRootPost: successfully write biliuid.txt");
+  //   else
+  //     DEBUGLN("handleRootPost: successfully write biliuid.txt");
+  // } else {
+  //   DEBUGLN("error, not found biliuid");
+  //   server.send(200, "text/html", "<meta charset='UTF-8'>error, not found Bilibili ID");
+  //   return;
+  // }
 
   server.send(200, "text/html", "<meta charset='UTF-8'>保存成功");//返回保存成功页面
   delay(2000);
   //连接wifi
   connectNewWifi();
-}
-
-void PrintWiFiStatus() {
-  u8g2.firstPage();
-    u8g2.setFont(u8g2_font_wqy12_t_chinese1);
-  do {
-    u8g2.drawStr(2, 11, "Connect to this WiFi");
-    u8g2.drawStr(2, 23, "WiFi SSID:");
-    u8g2.drawStr(2, 35, String(String("  ") + String(AP_NAME)).c_str()); // print AP name
-    u8g2.drawStr(2, 47, "Website should pop up");
-    u8g2.drawStr(2, 59, "  automatically");
-  } while ( u8g2.nextPage() );
-}
-
-void darwBilibili(uint8 index) {
-  u8g2.firstPage();
-  do {
-    u8g2.drawXBMP(0, 2, 117, 64, bilibiliFaces[index]);
-  } while (u8g2.nextPage());
 }
 
 void initBasic(void){//初始化基础
@@ -202,24 +188,20 @@ void connectNewWifi(void){
     WiFi.mode(WIFI_STA);//切换为STA模式
     WiFi.setAutoConnect(true);//设置自动连接
     WiFi.begin(sta_ssid, sta_password);//连接上一次连接成功的wifi
-    DEBUGLN("");
-    DEBUG("Connect to wifi");
+    DEBUG("\nConnect to wifi");
     int count = 0;
     while (WiFi.status() != WL_CONNECTED) {
-      unsigned long connect_time = millis();
-      while( (millis() - connect_time < 30000) && !WiFi.isConnected()) { // try connect wifi for 30sec
-        DEBUG(".");
-        darwBilibili(index_counter++ % 5);
-        delay(200);
+      // unsigned long connect_time = millis();
+      darwBilibili(index_counter++ % 5);
+      delay(200);
+      count++;
+      if(count > 100){//如果20秒内没有连上，就开启Web配网 可适当调整这个时间
+        initSoftAP();
+        initWebServer();
+        initDNS();
+        break;//跳出 防止无限初始化
       }
-      // count++;
-      // if(count > 10){//如果5秒内没有连上，就开启Web配网 可适当调整这个时间
-      //   initSoftAP();
-      //   initWebServer();
-      //   initDNS();
-      //   break;//跳出 防止无限初始化
-      // }
-      // DEBUG(".");
+      DEBUG(".");
     }
     DEBUGLN("");
     if(WiFi.status() == WL_CONNECTED){//如果连接上 就输出IP信息 防止未连接上break后会误输出
@@ -323,12 +305,9 @@ bool writeFile(fs::FS &fs, const char * path, const char * message){
 bool readFileCheck() {// return ture if all properties has value
   sta_ssid = readFile(SPIFFS, "/ssid.txt");
   sta_password = readFile(SPIFFS, "/password.txt");
-  biliuid = readFile(SPIFFS, "/biliuid.txt");
-  // return !(sta_ssid.isEmpty() || sta_password.isEmpty() || biliuid.isEmpty());
-  DEBUGLN("readFileCheck: sta_ssid.isEmpty(): " + String(sta_ssid.isEmpty()));
-  DEBUGLN("readFileCheck: sta_password.isEmpty(): " + String(sta_password.isEmpty()));
-  DEBUGLN("readFileCheck: biliuid.isEmpty(): " + String(biliuid.isEmpty()));
-  if (!sta_ssid.isEmpty() && !sta_password.isEmpty() && !biliuid.isEmpty()) {
+  // biliuid = readFile(SPIFFS, "/biliuid.txt");
+  // if (!sta_ssid.isEmpty() && !sta_password.isEmpty() && !biliuid.isEmpty()) {
+    if (!sta_ssid.isEmpty() && !sta_password.isEmpty()) {
     Serial.printf("readFileCheck: Pass\nsta_ssid: %s\nsta_password: %s\nbiliuid: %s\n", sta_ssid.c_str(), sta_password.c_str(), biliuid.c_str());
     return true;
   } else {
@@ -351,6 +330,25 @@ void drawSubs(){
     u8g2.drawStr(2, 63, String("Subscribers: " + String(follower)).c_str());
   } while (u8g2.nextPage());
   DEBUGLN("drawSubs: end");
+}
+
+void PrintWiFiStatus() {
+  u8g2.firstPage();
+    u8g2.setFont(u8g2_font_wqy12_t_chinese1);
+  do {
+    u8g2.drawStr(2, 11, "Connect to this WiFi");
+    u8g2.drawStr(2, 23, "WiFi SSID:");
+    u8g2.drawStr(2, 35, String(String("  ") + String(AP_NAME)).c_str()); // print AP name
+    u8g2.drawStr(2, 47, "Website should pop up");
+    u8g2.drawStr(2, 59, "  automatically");
+  } while ( u8g2.nextPage() );
+}
+
+void darwBilibili(uint8 index) {
+  u8g2.firstPage();
+  do {
+    u8g2.drawXBMP(0, 2, 117, 64, bilibiliFaces[index]);
+  } while (u8g2.nextPage());
 }
 
 template<typename T>
