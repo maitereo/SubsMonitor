@@ -19,7 +19,26 @@
 
 #define __DEBUG__ true // true to print debug info to use debuger
 
-U8G2_SSD1306_128X64_NONAME_1_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 4, /* dc=*/ 5, /* reset=*/ 3);	// Arduboy (Production, Kickstarter Edition)
+/* 本代码适用于ESP8266 NodeMCU + 12864显示屏
+7pin SPI引脚，正面看，从左到右依次为GND、VCC、D0、D1、RES、DC、CS
+   ESP8266 ---  OLED
+     3V    ---  VCC
+     G     ---  GND
+     D7    ---  D1
+     D5    ---  D0
+     D2orD8---  CS
+     D1    ---  DC
+     RST   ---  RES
+4pin IIC引脚，正面看，从左到右依次为GND、VCC、SCL、SDA
+     OLED  ---  ESP8266
+     VCC   ---  3.3V
+     GND   ---  G (GND)
+     SCL   ---  D1(GPIO5)
+     SDA   ---  D2(GPIO4)
+*/
+
+U8G2_SSD1305_128X64_ADAFRUIT_1_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 4, /* dc=*/ 5, /* reset=*/ 3); // working
+// U8G2_SSD1306_128X64_NONAME_1_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/ 4, /* dc=*/ 5, /* reset=*/ 3);	// Arduboy (Production, Kickstarter Edition)
 
 const char* AP_NAME = "SubMonitor";//wifi名字
 //暂时存储wifi账号密码
@@ -321,13 +340,13 @@ void drawSubs(){
   u8g2.firstPage();
   u8g2.setFont(u8g2_font_wqy12_t_chinese1);
   do {
-    u8g2.drawXBMP(0,0,40,40,icon40x40);
-    u8g2.drawXBMP(64,0,16,16,name[0]);
-    u8g2.drawXBMP(64+24,0,16,16,name[1]);
-    u8g2.drawXBMP(64-12,24,16,16,name[2]);
-    u8g2.drawXBMP(64+24-12,24,16,16,name[3]);
-    u8g2.drawXBMP(64+48-12,24,16,16,name[4]);
-    u8g2.drawStr(2, 63, String("Subscribers: " + String(follower)).c_str());
+    u8g2.drawXBMP(0+5,4,40,40,icon40x40);
+    u8g2.drawXBMP(64+5,4,16,16,name[0]);
+    u8g2.drawXBMP(64+24+4,5,16,16,name[1]);
+    u8g2.drawXBMP(64-12+4,24+5,16,16,name[2]);
+    u8g2.drawXBMP(64+24-12+4,24+5,16,16,name[3]);
+    u8g2.drawXBMP(64+48-12+4,24+5,16,16,name[4]);
+    u8g2.drawStr(10, 60, String("Subscribers: " + String(follower)).c_str());
   } while (u8g2.nextPage());
   DEBUGLN("drawSubs: end");
 }
@@ -347,7 +366,7 @@ void PrintWiFiStatus() {
 void darwBilibili(uint8 index) {
   u8g2.firstPage();
   do {
-    u8g2.drawXBMP(0, 2, 117, 64, bilibiliFaces[index]);
+    u8g2.drawXBMP(0, 0, 128, 64, bilibiliFaces[index]);
   } while (u8g2.nextPage());
 }
 
