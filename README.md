@@ -5,7 +5,7 @@
 <!-- PROJECT LOGO -->
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/maitereo/SubsMonitor/master/images/CAD.png">
+  <a href="https://github.com/maitereo/SubsMonitor/blob/master/images/CAD.png">
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
   <h3 align="center">SubsMonitor 粉丝数小电视</h3>
