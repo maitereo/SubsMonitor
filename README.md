@@ -1,7 +1,4 @@
 # SubsMonitor 粉丝数小电视
-
----
-
 <!-- PROJECT LOGO -->
 
 <p align="center">
@@ -28,10 +25,9 @@
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
+        <li><a href="#usage">Usage</a></li>
       </ul>
     </li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
   </ol>
 </details>
 
@@ -40,9 +36,6 @@
 <!-- ABOUT THE PROJECT -->
 
 ## About The Project
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
 Wants to keep monitor number of your subscribers of Bilibili? This project is to build a Bilibili Icon-like small device to update the number of fans of a Bilibili user, 24x7 non-stop. It grep the information via WiFi connection, after the first configuration. A reconnect message displays on the screen when connection is lost. Use any device to configure the device again and it's will be ready to update again.
 
 ### Built With
